@@ -14,18 +14,8 @@ namespace magicBerthing.DataLogics.Monitoring
 
             using (IDbConnection connection = Extension.GetConnection(1))
             {
-            try
+                try
                 {
-
-                    /*  string fnoPermohonan = "";
-                      if (!string.IsNullOrEmpty(NoPermohonan) && NoPermohonan != "7")
-                      {
-                          fnoPermohonan = "   AND A.NO_PERMOHONAN='" + NoPermohonan + "'  ";
-                      }
-
-
-
-      */
                     string paramKodeRegional = "";
                     if (!string.IsNullOrEmpty(paramPandu.kd_regional) && paramPandu.kd_regional != "string")
                     {
@@ -33,17 +23,13 @@ namespace magicBerthing.DataLogics.Monitoring
 
                     }
 
-                    string paramCallSign = "";
-                    if (!string.IsNullOrEmpty(paramPandu.call_sign) && paramPandu.call_sign != "string")
-                    {
-                        paramCallSign = " AND CALL_SIGN ='"+ paramPandu.call_sign + "'";
-                    
-                    }
-
                     string paramIdMasterArea = "";
                     if (!string.IsNullOrEmpty(paramPandu.id_master_area) && paramPandu.id_master_area != "string")
                     {
-                        paramIdMasterArea = " AND ID_MASTER_AREA='" + paramPandu.id_master_area + "'";
+                        if (paramPandu.is_jamuang != "1" && paramPandu.id_master_area != "5" && paramPandu.id_master_area != "6" && paramPandu.id_master_area != "4")
+                        {
+                            paramIdMasterArea = " AND ID_MASTER_AREA='" + paramPandu.id_master_area + "'";
+                        }
                     }
 
                     string paramNamaPandu = "";
@@ -52,11 +38,17 @@ namespace magicBerthing.DataLogics.Monitoring
                         paramNamaPandu = " AND NAMA ='" + paramPandu.nama_pandu + "'";
                     }
 
-
-                    string paramKawasan = "";
-                    if (!string.IsNullOrEmpty(paramPandu.kawasan) && paramPandu.kawasan !="string")
+                    string paramIsJamuang = "";
+                    if (!string.IsNullOrEmpty(paramPandu.is_jamuang) && paramPandu.is_jamuang!= "string")
                     {
-                        paramKawasan = " AND KAWASAN='" + paramPandu.kawasan + "'";
+                        if (paramPandu.id_master_area == "1")
+                        {
+                            paramIsJamuang = " AND IS_JAMUANG='1'";
+                        }
+                        else
+                        {
+                            paramIsJamuang = " AND IS_JAMUANG IN ('1', '0')";
+                        }
 
                     }
 
@@ -136,23 +128,54 @@ namespace magicBerthing.DataLogics.Monitoring
                     {
                         if (!string.IsNullOrEmpty(paramPandu.kd_regional) && paramPandu.kd_regional != "string")
                         {
-                            paramSearch = " WHERE NAMA LIKE '%" + paramPandu.search_key + "%' OR NAMA_KAPAL LIKE '%" + paramPandu.search_key + "%'";
+                            paramSearch = " WHERE NAMA LIKE '%" + paramPandu.search_key + "%' OR NAMA_KAPAL LIKE '%" + paramPandu.search_key + "%' OR NO_PPK1='" + paramPandu.search_key + "'";
                         }
                         else
                         {
                             var one_month_before = DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd HH:mm:ss");
-                            paramSearch = " WHERE NAMA LIKE '%" + paramPandu.search_key + "' OR NAMA_KAPAL LIKE '%" + paramPandu.search_key + "%' AND STATUS NOT IN ('AVAILABLE', 'AVAILABLE_JAMUANG') AND (TGL_OFF >= '" + one_month_before + "' OR TGL_OFF IS NULL)";
+                            paramSearch = " WHERE NAMA LIKE '%" + paramPandu.search_key + "' OR NAMA_KAPAL LIKE '%" + paramPandu.search_key + "%' OR NO_PPK1='" + paramPandu.search_key.ToString() + "' AND STATUS NOT IN ('AVAILABLE', 'AVAILABLE_JAMUANG') AND (TGL_OFF >= '" + one_month_before + "' OR TGL_OFF IS NULL)";
                         }
                     }
 
-                    string paramNoPpk1 = "";
-                    if (!string.IsNullOrEmpty(paramPandu.no_ppk1) && paramPandu.no_ppk1 != "string")
+                    string paramAsalTujuan = "";
+                    if (!string.IsNullOrEmpty(paramPandu.id_master_area) && paramPandu.id_master_area != "string")
                     {
-                        paramNoPpk1 = " AND NO_PPK1='" + paramPandu.no_ppk1 + "'";
+                        if (paramPandu.status_pandu == "RENCANA")
+                        {
+                            if (paramPandu.id_master_area == "6")
+                            {
+                                paramAsalTujuan = " AND (FROM_MDMG_NAMA IN('LAMONG CURAH KERING', 'LAMONG NUSANTARA', 'LAMONG OCEAN GOING') OR TO_MDMG_NAMA IN('LAMONG CURAH KERING', 'LAMONG NUSANTARA', 'LAMONG OCEAN GOING'))";
+                            }
+                            if (paramPandu.id_master_area == "5")
+                            {
+                                paramAsalTujuan = " AND (FROM_MDMG_NAMA IN('TPS/ICT OCEAN GOING', 'ICT NUSANTARA') OR TO_MDMG_NAMA IN('TPS/ICT OCEAN GOING', 'ICT NUSANTARA'))";
+                            }
+                        }
+                    }
+
+                    string paramKawasan = "";
+                    if (!string.IsNullOrEmpty(paramPandu.id_master_area) && paramPandu.id_master_area != "string")
+                    {
+                        if (paramPandu.id_master_area == "4")
+                        {
+                            paramKawasan = " AND KAWASAN='GRESIK'";
+                        }
+                        if (paramPandu.id_master_area == "2")
+                        {
+                            paramKawasan = " AND KAWASAN='SURABAYA'";
+                        }
+                        if (paramPandu.id_master_area == "5")
+                        {
+                            paramKawasan = " AND KAWASAN='TPS'";
+                        }
+                        if (paramPandu.id_master_area == "6")
+                        {
+                            paramKawasan = " AND KAWASAN='TTL'";
+                        }
                     }
 
                     string sql = @"SELECT * FROM (" +
-                                    "SELECT * FROM VW_MAGIC_PILOT_INFORMATION " + paramKodeRegional + paramNamaPandu + paramCallSign + paramIdMasterArea + paramKawasan + paramStatusPandu + paramNoPpk1 + paramCreatedAt + paramOrderby +
+                                    "SELECT * FROM VW_MAGIC_PILOT_INFORMATION " + paramKodeRegional + paramIdMasterArea + paramNamaPandu + paramStatusPandu + paramIsJamuang + paramKawasan + paramAsalTujuan + paramCreatedAt + paramOrderby +
                                    ")" + paramSearch;
 
                     result = connection.Query<PanduAvailable>(sql, new
