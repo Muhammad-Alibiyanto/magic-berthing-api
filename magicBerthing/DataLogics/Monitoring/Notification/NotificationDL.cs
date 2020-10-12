@@ -42,7 +42,7 @@ namespace magicBerthing.DataLogics.Monitoring.Notification
                         paramKdAgen = " WHERE KD_AGEN ='" + paramNotification.kd_agen + "'";
                     }
 
-                    string sql = @"SELECT * FROM T_MAGIC_NOTIFICATION" + paramKdAgen + paramId + paramIsRead + paramTitle;
+                    string sql = @"SELECT * FROM T_MAGIC_NOTIFICATION" + paramKdAgen + paramId + paramIsRead + paramTitle + " ORDER BY CREATED_DATE DESC";
 
                     result = connection.Query<NotificationData>(sql);
                 }

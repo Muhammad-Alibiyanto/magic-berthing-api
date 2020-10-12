@@ -128,7 +128,7 @@ namespace magicBerthing.DataLogics.Monitoring
                         "SELECT * FROM (SELECT A.*, B.REGIONAL_NAMA NAMA_REGIONAL, " +
                         "(CASE WHEN A.TGL_MULAI IS NULL AND A.TGL_SELESAI IS NULL AND A.STATUS_NOTA=0 THEN 'RENCANA' " +
                         "WHEN A.TGL_MULAI IS NOT NULL AND A.TGL_SELESAI IS NULL AND A.STATUS_NOTA=0 THEN 'SANDAR' " +
-                        "WHEN A.TGL_MULAI IS NOT NULL AND A.TGL_SELESAI IS NOT NULL OR A.STATUS_NOTA=1 THEN 'HISTORY' END" +
+                        "WHEN A.TGL_MULAI IS NOT NULL AND A.TGL_SELESAI IS NOT NULL THEN 'HISTORY' END" +
                         ") STATUS " +
                         "FROM VW_MAGIC_TERMINAL_INFO_HOME A, APP_REGIONAL B WHERE A.KD_REGIONAL=B.ID AND B.PARENT_ID IS NULL AND B.ID NOT IN (12300000,20300001) ) " + paramKodeRegional + paramKdCabangInduk + paramKdCabang + paramKdTerminal + paramStatus + paramType + paramJenisKapal + paramLokasi + paramKegiatan + paramNoPPKJasa + paramOrderby + 
                     ") " + paramSearch;

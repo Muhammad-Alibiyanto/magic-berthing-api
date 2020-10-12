@@ -18,12 +18,16 @@ namespace magicBerthing.DataLogics.Monitoring
     {
         public IEnumerable<SuggestionList> getSuggestion(ParamBerthSuggestion paramBerthSuggestion)
         {
+            string kode_cabang = create_two_digits(paramBerthSuggestion.kode_cabang.ToString());
+
             IEnumerable<PenetapanList> TanggalMulai = new List<PenetapanList>();
             IEnumerable<PenetapanList> TanggalSelesai = new List<PenetapanList>();
 
-            IEnumerable<DermagaList> Dermaga = new List<DermagaList>();
+            IEnumerable<DermagaList> Dermaga = get_dermaga_list(paramBerthSuggestion);
+
             IEnumerable<PasangSurutList> PasangSurut = new List<PasangSurutList>();
-            IEnumerable<AturanKadeList> AturanKade = new List<AturanKadeList>();
+
+            IEnumerable<AturanKadeList> AturanKade = get_port_rule(kode_cabang);
 
             List<SuggestionList> TempSuggestion = new List<SuggestionList>();
             List<SuggestionList> ListSuggestion = new List<SuggestionList>();
@@ -50,37 +54,17 @@ namespace magicBerthing.DataLogics.Monitoring
 
                 try
                 {
-                    string qtglselesai = "SELECT DISTINCT * FROM(" +
-                        "SELECT * FROM(SELECT B.KODE_CABANG_INDUK, B.KODE_CABANG, A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.NAMA_KAPAL, B.NAMA_AGEN, B.GT_KAPAL, B.LOA, A.KADE_AWAL, A.KADE_AKHIR, A.KODE_LOKASI, A.NAMA_LOKASI, A.TGL_MULAI, A.TGL_SELESAI, VASA.FUNC_GET_CLUSTER_POCC(A.KADE_AWAL, A.KADE_AKHIR, B.KODE_CABANG_INDUK, A.KODE_LOKASI) AREA_DERMAGA, (A.KADE_AKHIR - A.KADE_AWAL) KADE_USED " +
-                        "FROM(SELECT * FROM(SELECT A.*, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN_PTP FROM(SELECT KODE_TERMINAL, NO_PPK1, NO_PPK_JASA, KADE_AWAL, KADE_AKHIR, KODE_LOKASI, NAMA_LOKASI, TGL_MULAI, TGL_SELESAI, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN, CREATED " +
-                        "FROM VASA.PTP_TAMBAT WHERE TO_CHAR(TGL_SELESAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND PARENT_PTP_JASA_ID IS NULL AND STATUS NOT IN(6, 8, 9, 10) UNION ALL " +
-                        "SELECT * FROM(SELECT A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.KADE_AWAL, B.KADE_AKHIR, B.KODE_LOKASI, B.NAMA_LOKASI, B.TGL_MULAI, B.TGL_SELESAI, RANK() OVER(PARTITION BY A.NO_PPK1 ORDER BY B.CREATED DESC) AS URUTAN, B.CREATED " +
-                        "FROM VASA.PTP_TAMBAT A, VASA.PTP_TAMBAT B WHERE TO_CHAR(A.TGL_SELESAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND B.NO_PPK1 = A.NO_PPK1 AND B.PARENT_PTP_JASA_ID = A.ID) WHERE URUTAN = 1) A) WHERE URUTAN_PTP = 1) A, VASA.PERMOHONAN B " +
-                        "WHERE A.NO_PPK1 = B.NO_PPK1 AND TO_CHAR(A.TGL_SELESAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' ORDER BY A.TGL_SELESAI, A.KADE_AWAL ASC) WHERE KODE_CABANG = " + paramBerthSuggestion.kode_cabang + paramKomoditi +
-                        " UNION ALL " +
-                        "SELECT * FROM(SELECT B.KODE_CABANG_INDUK, B.KODE_CABANG, A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.NAMA_KAPAL, B.NAMA_AGEN, B.GT_KAPAL, B.LOA, A.KADE_AWAL, A.KADE_AKHIR, A.KODE_LOKASI, A.NAMA_LOKASI, A.TGL_MULAI, A.TGL_SELESAI, VASA.FUNC_GET_CLUSTER_POCC(A.KADE_AWAL, A.KADE_AKHIR, B.KODE_CABANG_INDUK, A.KODE_LOKASI) AREA_DERMAGA, (A.KADE_AKHIR - A.KADE_AWAL) KADE_USED " +
-                        "FROM(SELECT * FROM(SELECT A.*, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN_PTP FROM(SELECT KODE_TERMINAL, NO_PPK1, NO_PPK_JASA, KADE_AWAL, KADE_AKHIR, KODE_LOKASI, NAMA_LOKASI, TGL_MULAI, TGL_SELESAI, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN, CREATED " +
-                        "FROM VASA.PTP_TAMBAT WHERE TO_CHAR(TGL_MULAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND PARENT_PTP_JASA_ID IS NULL AND STATUS NOT IN(6, 8, 9, 10) UNION ALL " +
-                        "SELECT * FROM(SELECT A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.KADE_AWAL, B.KADE_AKHIR, B.KODE_LOKASI, B.NAMA_LOKASI, B.TGL_MULAI, B.TGL_SELESAI, RANK() OVER(PARTITION BY A.NO_PPK1 ORDER BY B.CREATED DESC) AS URUTAN, B.CREATED FROM VASA.PTP_TAMBAT A, VASA.PTP_TAMBAT B WHERE TO_CHAR(A.TGL_MULAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND B.NO_PPK1 = A.NO_PPK1 AND B.PARENT_PTP_JASA_ID = A.ID) " +
-                        "WHERE URUTAN = 1) A) WHERE URUTAN_PTP = 1) A, VASA.PERMOHONAN B WHERE A.NO_PPK1 = B.NO_PPK1 AND TO_CHAR(A.TGL_MULAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' ORDER BY A.TGL_MULAI, A.KADE_AWAL ASC) WHERE KODE_CABANG = " + paramBerthSuggestion.kode_cabang + paramKomoditi +
-                    ") ORDER BY KADE_AWAL, NAMA_LOKASI, TGL_MULAI ASC";
+                    string qtglselesai = "SELECT DISTINCT* FROM(SELECT* FROM(SELECT B.KODE_CABANG_INDUK, B.KODE_CABANG, A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.NAMA_KAPAL, B.NAMA_AGEN, B.GT_KAPAL, B.LOA, A.KADE_AWAL, A.KADE_AKHIR, A.KODE_LOKASI, A.NAMA_LOKASI, A.TGL_MULAI, A.TGL_SELESAI, VASA.FUNC_GET_CLUSTER_POCC(A.KADE_AWAL, A.KADE_AKHIR, B.KODE_CABANG_INDUK, A.KODE_LOKASI) AREA_DERMAGA, (A.KADE_AKHIR -A.KADE_AWAL) KADE_USED FROM(SELECT * FROM(SELECT A.*, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN_PTP FROM(SELECT KODE_TERMINAL, NO_PPK1, NO_PPK_JASA, KADE_AWAL, KADE_AKHIR, KODE_LOKASI, NAMA_LOKASI, TGL_MULAI, TGL_SELESAI, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN, " +
+                                        "CREATED FROM VASA.PTP_TAMBAT WHERE TO_CHAR(TGL_SELESAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND PARENT_PTP_JASA_ID IS NULL AND STATUS NOT IN(6, 8, 9, 10) UNION ALL SELECT * FROM(SELECT A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.KADE_AWAL, B.KADE_AKHIR, B.KODE_LOKASI, B.NAMA_LOKASI, B.TGL_MULAI, B.TGL_SELESAI, RANK() OVER(PARTITION BY A.NO_PPK1 ORDER BY B.CREATED DESC) AS URUTAN, B.CREATED FROM VASA.PTP_TAMBAT A, VASA.PTP_TAMBAT B WHERE TO_CHAR(A.TGL_SELESAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND B.NO_PPK1 = A.NO_PPK1 AND B.PARENT_PTP_JASA_ID = A.ID) WHERE URUTAN = 1) A) WHERE URUTAN_PTP = 1) A, VASA.PERMOHONAN B WHERE A.NO_PPK1 = B.NO_PPK1 AND TO_CHAR(A.TGL_SELESAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' ORDER BY A.TGL_SELESAI, A.KADE_AWAL ASC) " +
+                                        "WHERE KODE_CABANG = '" + create_two_digits(paramBerthSuggestion.kode_cabang.ToString()) + "' AND AREA_DERMAGA = '" + paramBerthSuggestion.komoditi + "' UNION ALL SELECT * FROM(SELECT B.KODE_CABANG_INDUK, B.KODE_CABANG, A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.NAMA_KAPAL, B.NAMA_AGEN, B.GT_KAPAL, B.LOA, A.KADE_AWAL, A.KADE_AKHIR, A.KODE_LOKASI, A.NAMA_LOKASI, A.TGL_MULAI, A.TGL_SELESAI, VASA.FUNC_GET_CLUSTER_POCC(A.KADE_AWAL, A.KADE_AKHIR, B.KODE_CABANG_INDUK, A.KODE_LOKASI) AREA_DERMAGA, (A.KADE_AKHIR -A.KADE_AWAL) KADE_USED FROM(SELECT* FROM(SELECT A.*, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN_PTP FROM(SELECT KODE_TERMINAL, NO_PPK1, NO_PPK_JASA, KADE_AWAL, KADE_AKHIR, KODE_LOKASI, NAMA_LOKASI, TGL_MULAI, TGL_SELESAI, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN, CREATED FROM VASA.PTP_TAMBAT " +
+                                        "WHERE TO_CHAR(TGL_MULAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND PARENT_PTP_JASA_ID IS NULL AND STATUS NOT IN(6, 8, 9, 10) UNION ALL SELECT * FROM(SELECT A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.KADE_AWAL, B.KADE_AKHIR, B.KODE_LOKASI, B.NAMA_LOKASI, B.TGL_MULAI, B.TGL_SELESAI, RANK() OVER(PARTITION BY A.NO_PPK1 ORDER BY B.CREATED DESC) AS URUTAN, B.CREATED FROM VASA.PTP_TAMBAT A, VASA.PTP_TAMBAT B WHERE TO_CHAR(A.TGL_MULAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND B.NO_PPK1 = A.NO_PPK1 AND B.PARENT_PTP_JASA_ID = A.ID) WHERE URUTAN = 1) A) WHERE URUTAN_PTP = 1) A, VASA.PERMOHONAN B WHERE A.NO_PPK1 = B.NO_PPK1 AND TO_CHAR(A.TGL_MULAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' ORDER BY A.TGL_MULAI, A.KADE_AWAL ASC) WHERE KODE_CABANG = '" + create_two_digits(paramBerthSuggestion.kode_cabang.ToString()) + "' AND AREA_DERMAGA = '" + paramBerthSuggestion.komoditi + "') ORDER BY KADE_AWAL, NAMA_LOKASI, TGL_MULAI ASC";
 
                     TanggalSelesai = connection.Query<PenetapanList>(qtglselesai).ToList();
 
-                    string qtglmulai = "SELECT DISTINCT * FROM(" +
-                        "SELECT * FROM(SELECT B.KODE_CABANG_INDUK, B.KODE_CABANG, A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.NAMA_KAPAL, B.NAMA_AGEN, B.GT_KAPAL, B.LOA, A.KADE_AWAL, A.KADE_AKHIR, A.KODE_LOKASI, A.NAMA_LOKASI, A.TGL_MULAI, A.TGL_SELESAI, VASA.FUNC_GET_CLUSTER_POCC(A.KADE_AWAL, A.KADE_AKHIR, B.KODE_CABANG_INDUK, A.KODE_LOKASI) AREA_DERMAGA, (A.KADE_AKHIR - A.KADE_AWAL) KADE_USED " +
-                        "FROM(SELECT * FROM(SELECT A.*, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN_PTP FROM(SELECT KODE_TERMINAL, NO_PPK1, NO_PPK_JASA, KADE_AWAL, KADE_AKHIR, KODE_LOKASI, NAMA_LOKASI, TGL_MULAI, TGL_SELESAI, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN, CREATED " +
-                        "FROM VASA.PTP_TAMBAT WHERE TO_CHAR(TGL_SELESAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND PARENT_PTP_JASA_ID IS NULL AND STATUS NOT IN(6, 8, 9, 10) UNION ALL " +
-                        "SELECT * FROM(SELECT A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.KADE_AWAL, B.KADE_AKHIR, B.KODE_LOKASI, B.NAMA_LOKASI, B.TGL_MULAI, B.TGL_SELESAI, RANK() OVER(PARTITION BY A.NO_PPK1 ORDER BY B.CREATED DESC) AS URUTAN, B.CREATED " +
-                        "FROM VASA.PTP_TAMBAT A, VASA.PTP_TAMBAT B WHERE TO_CHAR(A.TGL_SELESAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND B.NO_PPK1 = A.NO_PPK1 AND B.PARENT_PTP_JASA_ID = A.ID) WHERE URUTAN = 1) A) WHERE URUTAN_PTP = 1) A, VASA.PERMOHONAN B " +
-                        "WHERE A.NO_PPK1 = B.NO_PPK1 AND TO_CHAR(A.TGL_SELESAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' ORDER BY A.TGL_SELESAI, A.KADE_AWAL ASC) WHERE KODE_CABANG = " + paramBerthSuggestion.kode_cabang + paramKomoditi +
-                        " UNION ALL " +
-                        "SELECT * FROM(SELECT B.KODE_CABANG_INDUK, B.KODE_CABANG, A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.NAMA_KAPAL, B.NAMA_AGEN, B.GT_KAPAL, B.LOA, A.KADE_AWAL, A.KADE_AKHIR, A.KODE_LOKASI, A.NAMA_LOKASI, A.TGL_MULAI, A.TGL_SELESAI, VASA.FUNC_GET_CLUSTER_POCC(A.KADE_AWAL, A.KADE_AKHIR, B.KODE_CABANG_INDUK, A.KODE_LOKASI) AREA_DERMAGA, (A.KADE_AKHIR - A.KADE_AWAL) KADE_USED " +
-                        "FROM(SELECT * FROM(SELECT A.*, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN_PTP FROM(SELECT KODE_TERMINAL, NO_PPK1, NO_PPK_JASA, KADE_AWAL, KADE_AKHIR, KODE_LOKASI, NAMA_LOKASI, TGL_MULAI, TGL_SELESAI, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN, CREATED " +
-                        "FROM VASA.PTP_TAMBAT WHERE TO_CHAR(TGL_MULAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND PARENT_PTP_JASA_ID IS NULL AND STATUS NOT IN(6, 8, 9, 10) UNION ALL " +
-                        "SELECT * FROM(SELECT A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.KADE_AWAL, B.KADE_AKHIR, B.KODE_LOKASI, B.NAMA_LOKASI, B.TGL_MULAI, B.TGL_SELESAI, RANK() OVER(PARTITION BY A.NO_PPK1 ORDER BY B.CREATED DESC) AS URUTAN, B.CREATED FROM VASA.PTP_TAMBAT A, VASA.PTP_TAMBAT B WHERE TO_CHAR(A.TGL_MULAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND B.NO_PPK1 = A.NO_PPK1 AND B.PARENT_PTP_JASA_ID = A.ID) " +
-                        "WHERE URUTAN = 1) A) WHERE URUTAN_PTP = 1) A, VASA.PERMOHONAN B WHERE A.NO_PPK1 = B.NO_PPK1 AND TO_CHAR(A.TGL_MULAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' ORDER BY A.TGL_MULAI, A.KADE_AWAL ASC) WHERE KODE_CABANG = " + paramBerthSuggestion.kode_cabang + paramKomoditi +
-                    ") ORDER BY KADE_AWAL, NAMA_LOKASI, TGL_MULAI ASC";
+                    string qtglmulai = "SELECT DISTINCT* FROM(SELECT* FROM(SELECT B.KODE_CABANG_INDUK, B.KODE_CABANG, A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.NAMA_KAPAL, B.NAMA_AGEN, B.GT_KAPAL, B.LOA, A.KADE_AWAL, A.KADE_AKHIR, A.KODE_LOKASI, A.NAMA_LOKASI, A.TGL_MULAI, A.TGL_SELESAI, VASA.FUNC_GET_CLUSTER_POCC(A.KADE_AWAL, A.KADE_AKHIR, B.KODE_CABANG_INDUK, A.KODE_LOKASI) AREA_DERMAGA, (A.KADE_AKHIR -A.KADE_AWAL) KADE_USED FROM(SELECT * FROM(SELECT A.*, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN_PTP FROM(SELECT KODE_TERMINAL, NO_PPK1, NO_PPK_JASA, KADE_AWAL, KADE_AKHIR, KODE_LOKASI, NAMA_LOKASI, TGL_MULAI, TGL_SELESAI, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN, " +
+                                        "CREATED FROM VASA.PTP_TAMBAT WHERE TO_CHAR(TGL_SELESAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND PARENT_PTP_JASA_ID IS NULL AND STATUS NOT IN(6, 8, 9, 10) UNION ALL SELECT * FROM(SELECT A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.KADE_AWAL, B.KADE_AKHIR, B.KODE_LOKASI, B.NAMA_LOKASI, B.TGL_MULAI, B.TGL_SELESAI, RANK() OVER(PARTITION BY A.NO_PPK1 ORDER BY B.CREATED DESC) AS URUTAN, B.CREATED FROM VASA.PTP_TAMBAT A, VASA.PTP_TAMBAT B WHERE TO_CHAR(A.TGL_SELESAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND B.NO_PPK1 = A.NO_PPK1 AND B.PARENT_PTP_JASA_ID = A.ID) WHERE URUTAN = 1) A) WHERE URUTAN_PTP = 1) A, VASA.PERMOHONAN B WHERE A.NO_PPK1 = B.NO_PPK1 AND TO_CHAR(A.TGL_SELESAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' ORDER BY A.TGL_SELESAI, A.KADE_AWAL ASC) " +
+                                        "WHERE KODE_CABANG = '" + create_two_digits(paramBerthSuggestion.kode_cabang.ToString()) + "' AND AREA_DERMAGA = '" + paramBerthSuggestion.komoditi + "' UNION ALL SELECT * FROM(SELECT B.KODE_CABANG_INDUK, B.KODE_CABANG, A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.NAMA_KAPAL, B.NAMA_AGEN, B.GT_KAPAL, B.LOA, A.KADE_AWAL, A.KADE_AKHIR, A.KODE_LOKASI, A.NAMA_LOKASI, A.TGL_MULAI, A.TGL_SELESAI, VASA.FUNC_GET_CLUSTER_POCC(A.KADE_AWAL, A.KADE_AKHIR, B.KODE_CABANG_INDUK, A.KODE_LOKASI) AREA_DERMAGA, (A.KADE_AKHIR -A.KADE_AWAL) KADE_USED FROM(SELECT* FROM(SELECT A.*, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN_PTP FROM(SELECT KODE_TERMINAL, NO_PPK1, NO_PPK_JASA, KADE_AWAL, KADE_AKHIR, KODE_LOKASI, NAMA_LOKASI, TGL_MULAI, TGL_SELESAI, RANK() OVER(PARTITION BY NO_PPK1 ORDER BY CREATED DESC) AS URUTAN, CREATED FROM VASA.PTP_TAMBAT " +
+                                        "WHERE TO_CHAR(TGL_MULAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND PARENT_PTP_JASA_ID IS NULL AND STATUS NOT IN(6, 8, 9, 10) UNION ALL SELECT * FROM(SELECT A.KODE_TERMINAL, A.NO_PPK1, A.NO_PPK_JASA, B.KADE_AWAL, B.KADE_AKHIR, B.KODE_LOKASI, B.NAMA_LOKASI, B.TGL_MULAI, B.TGL_SELESAI, RANK() OVER(PARTITION BY A.NO_PPK1 ORDER BY B.CREATED DESC) AS URUTAN, B.CREATED FROM VASA.PTP_TAMBAT A, VASA.PTP_TAMBAT B WHERE TO_CHAR(A.TGL_MULAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' AND B.NO_PPK1 = A.NO_PPK1 AND B.PARENT_PTP_JASA_ID = A.ID) WHERE URUTAN = 1) A) WHERE URUTAN_PTP = 1) A, VASA.PERMOHONAN B WHERE A.NO_PPK1 = B.NO_PPK1 AND TO_CHAR(A.TGL_MULAI, 'DD-MM-YYYY') = '" + paramBerthSuggestion.tgl + "' ORDER BY A.TGL_MULAI, A.KADE_AWAL ASC) WHERE KODE_CABANG = '" + create_two_digits(paramBerthSuggestion.kode_cabang.ToString()) + "' AND AREA_DERMAGA = '" + paramBerthSuggestion.komoditi + "') ORDER BY KADE_AWAL, NAMA_LOKASI, TGL_MULAI ASC";
 
                     TanggalMulai = connection.Query<PenetapanList>(qtglmulai).ToList();
                 }
@@ -88,49 +72,6 @@ namespace magicBerthing.DataLogics.Monitoring
                 {
                     TanggalSelesai = null;
                     TanggalMulai = null;
-                }
-            }
-
-            using (IDbConnection connection = Extension.GetConnection(0))
-            {
-                try
-                {
-                    string paramKomoditi = "";
-                    if (paramBerthSuggestion.komoditi == "PETIKEMAS")
-                    {
-                        paramKomoditi = "WHERE KATEGORI = '" + paramBerthSuggestion.komoditi + "'";
-                    }
-                    else
-                    {
-                        paramKomoditi = "WHERE KATEGORI = '" + paramBerthSuggestion.komoditi + "' OR KATEGORI = 'UMUM'";
-                    }
-
-                    string query = "SELECT * FROM (SELECT DISTINCT A.KODE_CABANG, A.KODE_DERMAGA, D.MDMG_JENIS_DMG JENIS_DERMAGA, D.MDMG_NAMA NAMA_DERMAGA, MIN (A.KADE_AWAL) KADE_AWAL, MAX (A.KADE_AKHIR) KADE_AKHIR, B.NAMA, B.KATEGORI, E.KEDALAMAN, E.KODE_CABANG AS KODE_CABANG_KEDALAMAN, D.KD_CABANG AS KODE_CABANG_INDUK " +
-                                    "FROM VASA.CLUSTERING_DERMAGA A, (SELECT ID, NAMA, (CASE WHEN NAMA = 'GENERAL CARGO' OR NAMA = 'GENERAL CARGO (GC)' OR NAMA = 'GC' OR NAMA = 'MOBIL'  OR NAMA = 'SEPEDA MOTOR' THEN 'GC' WHEN NAMA = 'CURAH CAIR' THEN 'CURAH CAIR' WHEN NAMA = 'CURAH KERING' THEN 'CURAH KERING' WHEN NAMA = 'BESI PRODUKSI' OR NAMA = 'HEWAN' OR NAMA = 'UNITIZED' OR NAMA = 'DRILLING MATERIAL' OR NAMA = 'SEMBAKO' OR NAMA = 'KAYU MASAK' OR NAMA = 'BUNKER' OR NAMA = 'COMBO WINDOWS' OR NAMA = 'COMBO NON WINDOWS' OR NAMA = 'BAG CARGO' OR NAMA = 'CREW SERVICE' OR NAMA = 'MULTIPURPOSE' THEN 'UNITIZED' WHEN NAMA = 'UMUM' THEN 'UMUM' WHEN NAMA = 'PENUMPANG' THEN 'PENUMPANG' WHEN NAMA = 'MUATAN PENUMPANG' THEN 'UNITIZED' WHEN NAMA = 'PETI KEMAS' OR NAMA = 'PETI KEMAS NON WINDOWS' OR NAMA = 'PETIKEMAS' OR NAMA = 'KONTAINER' THEN 'PETIKEMAS' END) KATEGORI " +
-                                    "FROM(SELECT ID, UPPER(NAMA) NAMA FROM VASA.CLUSTERING)) B, MASTERDATA.UPKM_DERMAGA D, (SELECT ID, KEDALAMAN, KODE_DERMAGA, KADE_AWAL, KADE_AKHIR, KODE_CABANG FROM VASA.KEDALAMAN) E " +
-                                    "WHERE A.CLUSTERING_ID = B.ID AND A.KODE_CABANG = D.KD_CABANG AND D.MDMG_JENIS_DMG = 'DMGUMUM' AND A.KODE_DERMAGA = D.MDMG_KODE AND A.KODE_CABANG = " + paramBerthSuggestion.kode_cabang + " AND E.KODE_DERMAGA = A.KODE_DERMAGA " +
-                                    "AND E.KODE_CABANG=" + paramBerthSuggestion.kode_cabang + " AND A.KADE_AWAL >= E.KADE_AWAL AND A.KADE_AKHIR <= E.KADE_AKHIR GROUP BY A.KODE_CABANG, A.KODE_DERMAGA, D.MDMG_JENIS_DMG, D.MDMG_NAMA, B.NAMA, B.KATEGORI, E.KEDALAMAN, E.KODE_CABANG, D.KD_CABANG) " +
-                                    paramKomoditi + " AND KODE_CABANG_KEDALAMAN=" + paramBerthSuggestion.kode_cabang + " ORDER BY KODE_CABANG, KODE_DERMAGA, KADE_AWAL ASC";
-
-                    Dermaga = connection.Query<DermagaList>(query).ToList();
-                }
-                catch (Exception e)
-                {
-                    Dermaga = null;
-                }
-            }
-
-            using (IDbConnection connection = Extension.GetConnection(1))
-            {
-                try
-                {
-                    string query = "SELECT * FROM ATURAN_KADE WHERE KODE_CABANG='" + paramBerthSuggestion.kd_cabang_aturan_kd + "'";
-
-                    AturanKade = connection.Query<AturanKadeList>(query).ToList();
-                }
-                catch (Exception e)
-                {
-                    AturanKade = null;
                 }
             }
 
@@ -327,6 +268,7 @@ namespace magicBerthing.DataLogics.Monitoring
                             {
                                 status_draft = 1;
                             }
+
 
                             ListSuggestion.Add(new SuggestionList()
                             {
@@ -539,8 +481,33 @@ namespace magicBerthing.DataLogics.Monitoring
 
             FinalSuggestion = this.getNotBookedPort(ReusedPort, paramBerthSuggestion).Count() > 0 ? this.getNotBookedPort(ReusedPort, paramBerthSuggestion) : ReusedPort;
 
-            //FinalSuggestion = this.getNotBookedPort(ReusedPort, paramBerthSuggestion);
-            return FinalSuggestion;
+            return ListSuggestion;
+
+        }
+
+        /**
+         * Ambil peraturan tambat sesuai dengan dermaga yang diinginkan
+         * @return Response
+         */
+        public IEnumerable<AturanKadeList> get_port_rule(string kode_cabang)
+        {
+            IEnumerable<AturanKadeList> AturanKade = new List<AturanKadeList>();
+
+            using (IDbConnection connection = Extension.GetConnection(1))
+            {
+                try
+                {
+                    string query = "SELECT * FROM ATURAN_KADE WHERE KODE_CABANG='" + create_two_digits(kode_cabang) + "'";
+
+                    AturanKade = connection.Query<AturanKadeList>(query).ToList();
+                }
+                catch (Exception e)
+                {
+                    AturanKade = null;
+                }
+            }
+
+            return AturanKade;
         }
 
 
@@ -560,6 +527,47 @@ namespace magicBerthing.DataLogics.Monitoring
             return result;
         }
 
+
+        /**
+         * Ambil data dermaga dari master dermaga sesuai dengan kode cabang yang dipilih
+         * @return List
+         */
+        public IEnumerable<DermagaList> get_dermaga_list(ParamBerthSuggestion paramBerthSuggestion)
+        {
+
+            IEnumerable<DermagaList> Dermaga = new List<DermagaList>();
+
+            using (IDbConnection connection = Extension.GetConnection(0))
+            {
+                try
+                {
+                    string paramKomoditi = "";
+                    if (paramBerthSuggestion.komoditi == "PETIKEMAS")
+                    {
+                        paramKomoditi = "WHERE KATEGORI = '" + paramBerthSuggestion.komoditi + "'";
+                    }
+                    else
+                    {
+                        paramKomoditi = "WHERE KATEGORI = '" + paramBerthSuggestion.komoditi + "' OR KATEGORI = 'UMUM'";
+                    }
+
+                    string query = "SELECT * FROM (SELECT DISTINCT A.KODE_CABANG, A.KODE_DERMAGA, D.MDMG_JENIS_DMG JENIS_DERMAGA, D.MDMG_NAMA NAMA_DERMAGA, MIN (A.KADE_AWAL) KADE_AWAL, MAX (A.KADE_AKHIR) KADE_AKHIR, B.NAMA, B.KATEGORI, E.KEDALAMAN, E.KODE_CABANG AS KODE_CABANG_KEDALAMAN, D.KD_CABANG AS KODE_CABANG_INDUK " +
+                                    "FROM VASA.CLUSTERING_DERMAGA A, (SELECT ID, NAMA, (CASE WHEN NAMA = 'GENERAL CARGO' OR NAMA = 'GENERAL CARGO (GC)' OR NAMA = 'GC' OR NAMA = 'MOBIL'  OR NAMA = 'SEPEDA MOTOR' THEN 'GC' WHEN NAMA = 'CURAH CAIR' THEN 'CURAH CAIR' WHEN NAMA = 'CURAH KERING' THEN 'CURAH KERING' WHEN NAMA = 'BESI PRODUKSI' OR NAMA = 'HEWAN' OR NAMA = 'UNITIZED' OR NAMA = 'DRILLING MATERIAL' OR NAMA = 'SEMBAKO' OR NAMA = 'KAYU MASAK' OR NAMA = 'BUNKER' OR NAMA = 'COMBO WINDOWS' OR NAMA = 'COMBO NON WINDOWS' OR NAMA = 'BAG CARGO' OR NAMA = 'CREW SERVICE' OR NAMA = 'MULTIPURPOSE' THEN 'UNITIZED' WHEN NAMA = 'UMUM' THEN 'UMUM' WHEN NAMA = 'PENUMPANG' THEN 'PENUMPANG' WHEN NAMA = 'MUATAN PENUMPANG' THEN 'UNITIZED' WHEN NAMA = 'PETI KEMAS' OR NAMA = 'PETI KEMAS NON WINDOWS' OR NAMA = 'PETIKEMAS' OR NAMA = 'KONTAINER' THEN 'PETIKEMAS' END) KATEGORI " +
+                                    "FROM(SELECT ID, UPPER(NAMA) NAMA FROM VASA.CLUSTERING)) B, MASTERDATA.UPKM_DERMAGA D, (SELECT ID, KEDALAMAN, KODE_DERMAGA, KADE_AWAL, KADE_AKHIR, KODE_CABANG FROM VASA.KEDALAMAN) E " +
+                                    "WHERE A.CLUSTERING_ID = B.ID AND A.KODE_CABANG = D.KD_CABANG AND D.MDMG_JENIS_DMG = 'DMGUMUM' AND A.KODE_DERMAGA = D.MDMG_KODE AND A.KODE_CABANG = " + paramBerthSuggestion.kode_cabang + " AND E.KODE_DERMAGA = A.KODE_DERMAGA " +
+                                    "AND E.KODE_CABANG=" + paramBerthSuggestion.kode_cabang + " AND A.KADE_AWAL >= E.KADE_AWAL AND A.KADE_AKHIR <= E.KADE_AKHIR GROUP BY A.KODE_CABANG, A.KODE_DERMAGA, D.MDMG_JENIS_DMG, D.MDMG_NAMA, B.NAMA, B.KATEGORI, E.KEDALAMAN, E.KODE_CABANG, D.KD_CABANG) " +
+                                    paramKomoditi + " AND KODE_CABANG_KEDALAMAN=" + paramBerthSuggestion.kode_cabang + " ORDER BY KODE_CABANG, KODE_DERMAGA, KADE_AWAL ASC";
+
+                    Dermaga = connection.Query<DermagaList>(query).ToList();
+                }
+                catch (Exception e)
+                {
+                    Dermaga = null;
+                }
+            }
+
+            return Dermaga;
+        }
 
 
         /**

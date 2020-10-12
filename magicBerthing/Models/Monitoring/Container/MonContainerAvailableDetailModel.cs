@@ -41,6 +41,7 @@ namespace magicBerthing.Models.Monitoring.Container
         public string page { get; set; }
         public string limit { get; set; }
         public string area { get; set; }
+        public string transact_date { get; set; }
         public bool is_searching { get; set; }
         public string search_key { get; set; }
     }

@@ -47,6 +47,7 @@ namespace magicBerthing.Models.Monitoring
         public string kade_akhir_ptp { get; set; }
         public string kade_awal { get; set; }
         public string kade_akhir { get; set; }
+        public string status { get; set; }
     }
 
     public class ParamTerminal

@@ -43,7 +43,7 @@ namespace magicBerthing.DataLogics.Monitoring.Warehouse
                         paramNamaPelanggan = " AND T_STORAGE_CARGO_DETAIL.PELANGGAN='" + paramWarehouse.nama_pelanggan + "'";
                     }
 
-                    string paramNamaVak= null;
+                    string paramNamaVak = null;
                     if (!string.IsNullOrEmpty(paramWarehouse.nama_vak) && paramWarehouse.nama_vak != "string")
                     {
                         paramNamaVak = " AND T_STORAGE_CARGO_DETAIL.NAMA_VAK='" + paramWarehouse.nama_vak + "'";
@@ -61,10 +61,24 @@ namespace magicBerthing.DataLogics.Monitoring.Warehouse
                         paramSort = " ORDER BY T_STORAGE_CARGO_DETAIL." + paramWarehouse.order_by_column + " " + paramWarehouse.order_by_sort;
                     }
 
-                    string sql = "SELECT * FROM(" +
+                    string paramTgl = "";
+                    if (!string.IsNullOrEmpty(paramWarehouse.tgl_mulai) && paramWarehouse.tgl_mulai != "string")
+                    { 
+                        paramTgl = " WHERE TGL_MULAI IS NOT NULL AND TO_CHAR(TGL_MULAI, 'YYYY-MM-DD HH24:MI') < '" + paramWarehouse.tgl_mulai + "'";
+                    }
+
+                    string paramCreated = "";
+                    if (!string.IsNullOrEmpty(paramWarehouse.created_date) && paramWarehouse.created_date!= "string")
+                    { 
+                            paramTgl = " WHERE CREATED_DATE IS NOT NULL AND TO_CHAR(CREATED_DATE, 'YYYY-MM-DD HH24:MI') = '" + paramWarehouse.created_date + "'";
+                    }
+
+
+
+            string sql = "SELECT * FROM(" +
                                     "SELECT T_STORAGE_CARGO_DETAIL.*, APP_REGIONAL.REGIONAL_NAMA NAMA_REGIONAL FROM T_STORAGE_CARGO_DETAIL " +
                                     "JOIN APP_REGIONAL ON T_STORAGE_CARGO_DETAIL.KD_REGION=APP_REGIONAL.ID AND APP_REGIONAL.PARENT_ID IS NULL AND APP_REGIONAL.ID NOT IN (12300000,20300001) " + paramKdRegion + paramKdCabang + paramKdTerminal + paramNamaPelanggan + paramNamaVak + paramSort +
-                                 ")" + paramSearch;
+                                 ")" + paramSearch + paramCreated + paramTgl;
 
                     result = connection.Query<WarehouseDataVAKContent>(sql);
                 }

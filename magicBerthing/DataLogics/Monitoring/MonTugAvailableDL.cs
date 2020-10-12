@@ -83,9 +83,9 @@ namespace magicBerthing.DataLogics.Monitoring
                     }
 
                     string paramCreatedDate = "";
-                    if (!string.IsNullOrEmpty(paramTug.created_date) && paramTug.created_date != "string")
+                    if (!string.IsNullOrEmpty(paramTug.start_date) && paramTug.start_date != "string" && !string.IsNullOrEmpty(paramTug.end_date) && paramTug.end_date != "string")
                     {
-                        paramCreatedDate = " AND TRUNC(CREATED_DATE)=TO_DATE('" + paramTug.created_date + "', 'YYYY-MM-DD')";
+                        paramCreatedDate = " AND TRUNC(CREATED_DATE) BETWEEN TO_DATE('" + paramTug.start_date + "', 'YYYY-MM-DD') AND TO_DATE('" + paramTug.end_date + "', 'YYYY-MM-DD')";
                         /*if (paramTug.status_tug == "HISTORY")
                         {
                             if(paramTug.show_per_date == "day")

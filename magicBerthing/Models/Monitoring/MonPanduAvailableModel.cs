@@ -58,8 +58,12 @@ namespace magicBerthing.Models.Monitoring
         public string limit { get; set; }
         public string order_by_column { get; set; }
         public string order_by_sort { get; set; }
-        public string created_date { get; set; }
+        public string start_date { get; set; }
+        public string end_date { get; set; }
         public bool is_search { get; set; }
         public string search_key { get; set; }
+        public string tgl_work { get; set; }
+        public string tgl_off { get; set; }
+        public string kawasan { get; set; }
     }
 }

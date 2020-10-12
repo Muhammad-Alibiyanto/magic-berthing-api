@@ -46,6 +46,8 @@ namespace magicBerthing.Models.Monitoring.Warehouse
         public string search_key { get; set; }
         public string order_by_column { get; set; }
         public string order_by_sort { get; set; }
+        public string created_date { get; set; }
+        public string tgl_mulai { get; set; }
         public string page { get; set; }
         public string limit { get; set; }
     }

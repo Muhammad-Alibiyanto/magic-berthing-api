@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using magicBerthing.Models.Monitoring;
+using Microsoft.AspNetCore.Razor.Language;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -118,9 +119,9 @@ namespace magicBerthing.DataLogics.Monitoring
                     }
 
                     string paramCreatedAt = "";
-                    if (!string.IsNullOrEmpty(paramPandu.created_date) && paramPandu.created_date!= "string")
+                    if (!string.IsNullOrEmpty(paramPandu.start_date) && paramPandu.start_date!= "string")
                     {
-                        paramCreatedAt = " AND TRUNC(TGL_WORK)=TO_DATE('" + paramPandu.created_date + "', 'YYYY-MM-DD')";
+                        paramCreatedAt = " AND TRUNC(TGL_WORK) BETWEEN TO_DATE('" + paramPandu.start_date + "', 'YYYY-MM-DD') AND TO_DATE('" + paramPandu.end_date + "', 'YYYY-MM-DD')";
                     }
 
                     string paramSearch = "";
@@ -158,25 +159,57 @@ namespace magicBerthing.DataLogics.Monitoring
                     {
                         if (paramPandu.id_master_area == "4")
                         {
-                            paramKawasan = " AND KAWASAN='GRESIK'";
+                            if (paramPandu.status_pandu != "RENCANA")
+                            {
+                                paramKawasan = " AND KAWASAN='GRESIK'";
+                            }
+                            else
+                            {
+                                paramKawasan = " AND KAWASAN='" + paramPandu.kawasan + "'";
+                            }
                         }
                         if (paramPandu.id_master_area == "2")
                         {
-                            paramKawasan = " AND KAWASAN='SURABAYA'";
+                            if (paramPandu.status_pandu != "RENCANA")
+                            {
+                                paramKawasan = " AND KAWASAN='SURABAYA'";
+                            }
+                            else
+                            {
+                                paramKawasan = " AND KAWASAN='" + paramPandu.kawasan +"'";
+                            }
                         }
                         if (paramPandu.id_master_area == "5")
                         {
-                            paramKawasan = " AND KAWASAN='TPS'";
+                            if (paramPandu.status_pandu != "RENCANA")
+                            {
+                                paramKawasan = " AND KAWASAN='TPS'";
+                            }
                         }
                         if (paramPandu.id_master_area == "6")
                         {
-                            paramKawasan = " AND KAWASAN='TTL'";
+                            if (paramPandu.status_pandu != "RENCANA")
+                            { 
+                                paramKawasan = " AND KAWASAN='TTL'";
+                            }
                         }
                     }
 
+                    string paramTglWork = "";
+                    if (!string.IsNullOrEmpty(paramPandu.tgl_work) && paramPandu.tgl_work != "string")
+                    {
+                        paramTglWork = " AND TO_CHAR(TGL_WORK, 'YYYY/MM/DD HH24:MI')='" + paramPandu.tgl_work + "'";
+                    }
+
+                    string paramTglOff = "";
+                    if (!string.IsNullOrEmpty(paramPandu.tgl_off) && paramPandu.tgl_off!= "string")
+                    {
+                        paramTglWork = " AND TO_CHAR(TO_DATE(SUBSTR(TGL_OFF,1,16), 'YYYY-MM-DD HH:MI'), 'YYYY-MM-DD HH:MI')='" + paramPandu.tgl_off + "'";
+                    }
+
                     string sql = @"SELECT * FROM (" +
-                                    "SELECT * FROM VW_MAGIC_PILOT_INFORMATION " + paramKodeRegional + paramIdMasterArea + paramNamaPandu + paramStatusPandu + paramIsJamuang + paramKawasan + paramAsalTujuan + paramCreatedAt + paramOrderby +
-                                   ")" + paramSearch;
+                                "SELECT * FROM VW_MAGIC_PILOT_INFORMATION " + paramKodeRegional + paramIdMasterArea + paramNamaPandu + paramStatusPandu + paramIsJamuang + paramKawasan + paramAsalTujuan + paramCreatedAt + paramTglWork + paramTglOff + paramOrderby +
+                                ")" + paramSearch;
 
                     result = connection.Query<PanduAvailable>(sql, new
                     {

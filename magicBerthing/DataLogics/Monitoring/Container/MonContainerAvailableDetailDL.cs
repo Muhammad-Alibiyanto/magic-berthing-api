@@ -55,6 +55,12 @@ namespace magicBerthing.DataLogics.Monitoring.Container
                         paramSearch = " WHERE NAMA_PELANGGAN LIKE '" + paramContainerDetail.search_key + "%' OR VOYAGE_NO LIKE '" + paramContainerDetail.search_key + "%' OR VES_NAME LIKE '" + paramContainerDetail.search_key + "%' OR CONTAINER_NO LIKE '" + paramContainerDetail.search_key + "%'";
                     }
 
+                    string paramTransactDate = "";
+                    if (!string.IsNullOrEmpty(paramContainerDetail.transact_date) && paramContainerDetail.transact_date != "string")
+                    {
+                        paramTransactDate = " AND TRANSACT_DATE IS NOT NULL AND TO_CHAR(TRANSACT_DATE, 'YYYY-MM-DD HH24:MI') = '" + paramContainerDetail.transact_date + "'";
+                    }
+
                     var sql = @"SELECT * FROM (" +
                                     "SELECT " +
                                     "T_STORAGE_CONTAINER_BOX_DETAIL.KD_CABANG, " +
@@ -76,7 +82,7 @@ namespace magicBerthing.DataLogics.Monitoring.Container
                                     "APP_REGIONAL.PARENT_ID IS NULL AND " +
                                     "APP_REGIONAL.ID NOT IN (12300000,20300001)" + paramKodeRegional + paramKodeCabang + paramKodeTerminal + paramArea + 
                                     " GROUP BY NAMA_PELANGGAN, AREA, VES_NAME, KD_CABANG, KD_TERMINAL, KD_REGIONAL, VOYAGE_NO, CTR_SIZE, TRANSACT_DATE, TGL_PENUMPUKAN_DISC, CONTAINER_NO, REGIONAL_NAMA" +
-                                ")" + paramSearch;
+                                ")" + paramSearch + paramTransactDate;
 
                     result = connection.Query<ContainerDetailData>(sql, new
                     {

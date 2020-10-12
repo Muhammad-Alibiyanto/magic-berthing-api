@@ -84,7 +84,7 @@ namespace magicBerthing.DataLogics.Master
 
                         if(paramArea.current_screen == "ContainerInformation")
                         {
-                                sql = @"SELECT * FROM (SELECT * FROM VW_MASTER_CABANG_VASA " + paramKodeRegional + paramId + paramKdCabang + paramKdTerminal + paramIdPandu + ") WHERE NAMA_TERMINAL NOT IN('KUMAI', 'SAMPIT')";
+                                sql = @"SELECT * FROM (SELECT * FROM VW_MASTER_CABANG_VASA " + paramKodeRegional + paramId + paramKdCabang + paramKdTerminal + paramIdPandu + ") WHERE NAMA_TERMINAL NOT IN('KUMAI')";
                         }
                     }
                     else

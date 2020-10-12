@@ -18,11 +18,13 @@ namespace magicBerthing.Models.Monitoring.Notification
     public class NotificationData
     {
         public string message { get; set; }
+        public string data { get; set; }
         public string status { get; set; }
         public string kd_agen { get; set; }
         public string title { get; set; }
         public string is_read { get; set; }
         public string id { get; set; }
+        public string created_date { get; set; }
     }
 
     public class ParamNotification
